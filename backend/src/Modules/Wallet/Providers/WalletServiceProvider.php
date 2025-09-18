@@ -14,6 +14,9 @@ class WalletServiceProvider extends ServiceProvider
     {
         $this->app->bind(TransactionRepositoryInterface::class, TransactionRepository::class);
         $this->app->bind(WalletRepositoryInterface::class, WalletRepository::class);
+        
+        // Use Cases
+        $this->app->bind(\Modules\Wallet\Application\UseCases\CreateWallet::class);
     }
 
     public function boot(): void

@@ -2,7 +2,7 @@
 
 namespace Modules\Wallet\Application\UseCases;
 
-use Modules\Shared\Exceptions\InsufficientFundsException;
+use Modules\Shared\Exceptions\InsufficientBalanceException;
 use Modules\User\Domain\Repositories\UserRepositoryInterface;
 use Modules\Wallet\Domain\Repositories\WalletRepositoryInterface;
 use Modules\Wallet\Domain\Entities\Transaction;
@@ -22,7 +22,7 @@ class ReverseDeposit
         $wallet = $this->walletRepository->findByUserId($transaction->getUserId());
         
         if ($wallet->getBalance() < $transaction->getAmount()) {
-            throw new InsufficientFundsException();
+            throw new InsufficientBalanceException();
         }
 
         $newBalance = $wallet->getBalance() - $transaction->getAmount();

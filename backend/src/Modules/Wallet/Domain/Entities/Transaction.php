@@ -27,6 +27,7 @@ class Transaction
     public function getUserId(): int { return $this->userId; }
     public function getType(): TransactionType { return $this->type; }
     public function getAmount(): float { return $this->amount; }
+    public function setAmount($amount): void {     $this->amount = $amount;}
     public function getRecipientWalletId(): ?int { return $this->recipientWalletId; }
     public function getDescription(): ?string { return $this->description; }
     public function getReferenceId(): ?int { return $this->referenceId; }

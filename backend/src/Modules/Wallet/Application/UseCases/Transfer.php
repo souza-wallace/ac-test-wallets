@@ -3,7 +3,7 @@
 namespace Modules\Wallet\Application\UseCases;
 
 use Illuminate\Support\Facades\DB;
-use Modules\Shared\Exceptions\InsufficientFundsException;
+use Modules\Shared\Exceptions\InsufficientBalanceException;
 use Modules\User\Domain\Repositories\UserRepositoryInterface;
 use Modules\Wallet\Domain\Repositories\WalletRepositoryInterface;
 use Modules\Wallet\Domain\Repositories\TransactionRepositoryInterface;
@@ -39,7 +39,7 @@ class Transfer
             }
         
             if ($fromWallet->getBalance() < $amount) {
-                throw new InsufficientFundsException();
+                throw new InsufficientBalanceException();
             }
         
             $this->walletRepository->updateBalance(
