@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet, Mail, Lock, User } from "lucide-react";
+import { api } from "@/services/api";
 
 const Cadastro = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ const Cadastro = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -35,16 +37,35 @@ const Cadastro = () => {
 
     setIsLoading(true);
 
-    // Simular chamada para o backend
-    setTimeout(() => {
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Você pode fazer login agora.",
+    try {
+      const response = await api.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
       });
-      // Aqui você faria a integração com seu backend
-      // window.location.href = "/login";
+
+      if (response.error) {
+        toast({
+          title: "Erro no cadastro",
+          description: response.error || "Erro desconhecido",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Você pode fazer login agora.",
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      toast({
+        title: "Erro no cadastro",
+        description: "Erro de conexão com o servidor",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

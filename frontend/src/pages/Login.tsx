@@ -1,40 +1,50 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet, Mail, Lock } from "lucide-react";
+import { api } from "@/services/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simular chamada para o backend
-    setTimeout(() => {
-      if (email && password) {
+    try {
+      const response = await api.login({ email, password });
+
+      if (response.error) {
+        toast({
+          title: "Erro no login",
+          description: response.error || "Credenciais inválidas",
+          variant: "destructive",
+        });
+      } else if (response.token) {
+        localStorage.setItem('token', response.token);
         toast({
           title: "Login realizado com sucesso!",
           description: "Redirecionando para o dashboard...",
         });
-        // Aqui você faria a integração com seu backend
-        // window.location.href = "/dashboard";
-      } else {
-        toast({
-          title: "Erro no login",
-          description: "Verifique suas credenciais e tente novamente.",
-          variant: "destructive",
-        });
+        navigate("/dashboard");
       }
+    } catch (error) {
+      toast({
+        title: "Erro no login",
+        description: "Erro de conexão com o servidor",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { api, Transaction } from "@/services/api";
 import { 
   ArrowLeft, 
   History, 
@@ -18,84 +19,46 @@ import {
   Download
 } from "lucide-react";
 
-interface Transaction {
-  id: string;
-  type: "deposit" | "transfer_in" | "transfer_out";
-  amount: number;
-  description: string;
-  recipient?: string;
-  sender?: string;
-  date: string;
-  status: "completed" | "pending" | "failed" | "reversed";
-  canReverse: boolean;
-}
-
 const Historico = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const { toast } = useToast();
 
-  const transactions: Transaction[] = [
-    {
-      id: "1",
-      type: "deposit",
-      amount: 500.00,
-      description: "Depósito via PIX",
-      date: "2024-01-15T10:30:00Z",
-      status: "completed",
-      canReverse: true
-    },
-    {
-      id: "2",
-      type: "transfer_out",
-      amount: -150.25,
-      description: "Transferência para Maria Santos",
-      recipient: "maria.santos@email.com",
-      date: "2024-01-14T15:45:00Z",
-      status: "completed",
-      canReverse: true
-    },
-    {
-      id: "3",
-      type: "transfer_in",
-      amount: 75.50,
-      description: "Recebido de Pedro Costa",
-      sender: "pedro.costa@email.com",
-      date: "2024-01-13T09:20:00Z",
-      status: "completed",
-      canReverse: false
-    },
-    {
-      id: "4",
-      type: "transfer_out",
-      amount: -200.00,
-      description: "Pagamento da conta de luz",
-      recipient: "contaspagar@energia.com",
-      date: "2024-01-12T14:30:00Z",
-      status: "pending",
-      canReverse: true
-    },
-    {
-      id: "5",
-      type: "deposit",
-      amount: 1000.00,
-      description: "Depósito via Transferência Bancária",
-      date: "2024-01-11T08:15:00Z",
-      status: "failed",
-      canReverse: false
-    },
-    {
-      id: "6",
-      type: "transfer_out",
-      amount: -300.00,
-      description: "Transferência cancelada",
-      recipient: "joao.silva@email.com",
-      date: "2024-01-10T16:20:00Z",
-      status: "reversed",
-      canReverse: false
+  useEffect(() => {
+    loadTransactions();
+  }, [currentPage]);
+
+  const loadTransactions = async () => {
+    try {
+      console.log('lskjhkjh')
+      setLoading(true);
+      const response = await api.getTransactions(currentPage, 15);
+      
+      if (response.error) {
+        toast({
+          title: "Erro ao carregar transações",
+          description: response.error,
+          variant: "destructive",
+        });
+      } else {
+        setTransactions(response.data || []);
+        setTotalPages(response.last_page || 1);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível carregar as transações",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -112,6 +75,15 @@ const Historico = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const getTransactionType = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'deposit': return 'deposit';
+      case 'transfer': return 'transfer_out';
+      case 'reversal': return 'transfer_in';
+      default: return 'deposit';
+    }
   };
 
   const getTransactionIcon = (type: string) => {
@@ -131,13 +103,15 @@ const Historico = () => {
     const statusMap = {
       completed: { label: "Concluída", variant: "default" as const },
       pending: { label: "Pendente", variant: "secondary" as const },
-      failed: { label: "Falhou", variant: "destructive" as const },
-      reversed: { label: "Estornada", variant: "outline" as const }
+      reversed: { label: "Revertida", variant: "destructive" as const },
     };
-    
-    const config = statusMap[status as keyof typeof statusMap];
+  
+    const key = status.toLowerCase() as keyof typeof statusMap;
+    const config = statusMap[key];
+    if (!config) return <Badge variant="outline">Desconhecido</Badge>;
+  
     return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
+  };  
 
   const getTypeLabel = (type: string) => {
     const typeMap = {
@@ -156,12 +130,10 @@ const Historico = () => {
   };
 
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.recipient?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.sender?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = transaction.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
     const matchesStatus = statusFilter === "all" || transaction.status === statusFilter;
-    const matchesType = typeFilter === "all" || transaction.type === typeFilter;
+    const transactionType = getTransactionType(transaction.type);
+    const matchesType = typeFilter === "all" || transactionType === typeFilter;
     
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -276,58 +248,64 @@ const Historico = () => {
                     <p className="text-muted-foreground">Nenhuma transação encontrada</p>
                   </div>
                 ) : (
-                  filteredTransactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-card-hover transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-muted/50 rounded-full flex items-center justify-center">
-                          {getTransactionIcon(transaction.type)}
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium">{transaction.description}</p>
-                            <Badge variant="outline" className="text-xs">
-                              {getTypeLabel(transaction.type)}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-muted-foreground space-y-1">
-                            <p>{formatDate(transaction.date)}</p>
-                            {transaction.recipient && (
-                              <p>Para: {transaction.recipient}</p>
-                            )}
-                            {transaction.sender && (
-                              <p>De: {transaction.sender}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="text-right space-y-2">
-                        <div className="space-y-1">
-                          <p className={`font-semibold ${
-                            transaction.amount > 0 ? 'text-success' : 'text-destructive'
-                          }`}>
-                            {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
-                          </p>
-                          {getStatusBadge(transaction.status)}
-                        </div>
-                        
-                        {transaction.canReverse && transaction.status === "completed" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleReverseTransaction(transaction.id, transaction.description)}
-                            className="text-xs"
-                          >
-                            <RotateCcw className="w-3 h-3 mr-1" />
-                            Estornar
-                          </Button>
-                        )}
-                      </div>
+                  loading ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Carregando transações...</p>
                     </div>
-                  ))
+                  ) : (
+                    filteredTransactions.map((transaction) => {
+                      const transactionType = getTransactionType(transaction.type);
+                      return (
+                        <div
+                          key={transaction.id}
+                          className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-card-hover transition-colors"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-muted/50 rounded-full flex items-center justify-center">
+                              {getTransactionIcon(transactionType)}
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium">{transaction.description || 'Transação'}</p>
+                                <Badge variant="outline" className="text-xs">
+                                  {getTypeLabel(transactionType)}
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-muted-foreground space-y-1">
+                                <p>{formatDate(transaction.created_at)}</p>
+                                {transaction.related_wallet && (
+                                  <p>Carteira relacionada: {transaction.related_wallet}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right space-y-2">
+                            <div className="space-y-1">
+                              <p className={`font-semibold ${
+                                transactionType === 'deposit' || transactionType === 'transfer_in' ? 'text-success' : 'text-destructive'
+                              }`}>
+                                {(transactionType === 'deposit' || transactionType === 'transfer_in') ? '+' : '-'}{formatCurrency(Math.abs(transaction.amount))}
+                              </p>
+                              {getStatusBadge(transaction.status)}
+                            </div>
+                            
+                            {transaction.status === "completed" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleReverseTransaction(transaction.id.toString(), transaction.description || 'Transação')}
+                                className="text-xs"
+                              >
+                                <RotateCcw className="w-3 h-3 mr-1" />
+                                Estornar
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )
                 )}
               </div>
             </CardContent>
