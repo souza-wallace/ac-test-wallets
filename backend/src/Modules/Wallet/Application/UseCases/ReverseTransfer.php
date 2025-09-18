@@ -2,7 +2,7 @@
 
 namespace Modules\Wallet\Application\UseCases;
 
-use Modules\Shared\Exceptions\InsufficientFundsException;
+use Modules\Shared\Exceptions\InsufficientBalanceException;
 use Modules\User\Domain\Repositories\UserRepositoryInterface;
 use Modules\Wallet\Domain\Repositories\WalletRepositoryInterface;
 use Modules\Wallet\Domain\Entities\Transaction;
@@ -23,7 +23,7 @@ class ReverseTransfer
         $toWallet = $this->walletRepository->findByUserId($transaction->getRecipientWalletId());
 
         if ($toWallet->getBalance() < $transaction->getAmount()) {
-            throw new InsufficientFundsException();
+            throw new InsufficientBalanceException();
         }
 
         $this->walletRepository->updateBalance($fromWallet->getId(), $fromWallet->getBalance() + $transaction->getAmount());

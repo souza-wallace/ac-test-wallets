@@ -20,10 +20,6 @@ class Deposit
 
     public function execute(int $userId, float $amount): Transaction
     {
-        if ($amount <= 0) {
-            throw new \InvalidArgumentException('Amount must be positive');
-        }
-
         return DB::transaction(function () use ($userId, $amount) {
             $user = $this->userRepository->findById($userId);
             if (!$user) {
@@ -31,9 +27,6 @@ class Deposit
             }
 
             $wallet = $this->walletRepository->findByUserId($userId);
-            if (!$wallet) {
-                throw new \InvalidArgumentException('Wallet not found');
-            }
 
             $newBalance = $wallet->getBalance() + $amount;
             $this->walletRepository->updateBalance($wallet->getId(), $newBalance);

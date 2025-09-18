@@ -2,7 +2,7 @@
 
 namespace Modules\Wallet\Domain\Entities;
 
-use Modules\Shared\Exceptions\InsufficientFundsException;
+use Modules\Shared\Exceptions\InsufficientBalanceException;
 
 class Wallet
 {
@@ -59,7 +59,7 @@ class Wallet
         }
 
         if ($this->balance < $amount) {
-            throw new InsufficientFundsException();
+            throw new InsufficientBalanceException();
         }
 
         $this->balance -= $amount;
