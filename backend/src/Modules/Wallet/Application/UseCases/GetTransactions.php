@@ -2,6 +2,7 @@
 
 namespace Modules\Wallet\Application\UseCases;
 
+use Modules\Shared\ValueObjects\PaginatedResult;
 use Modules\Wallet\Domain\Repositories\TransactionRepositoryInterface;
 
 class GetTransactions
@@ -10,7 +11,7 @@ class GetTransactions
         private TransactionRepositoryInterface $transactionRepository
     ) {}
 
-    public function execute(int $userId): array
+    public function execute(int $userId)
     {
         return $this->transactionRepository->findByUserId($userId);
     }

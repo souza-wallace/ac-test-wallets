@@ -2,18 +2,17 @@
 
 namespace Modules\User\Application\UseCases;
 
+use Modules\User\Domain\Entities\User;
 use Modules\User\Domain\Repositories\UserRepositoryInterface;
 
-class GetUserBalance
+class GetUser
 {
     public function __construct(
         private UserRepositoryInterface $userRepository
     ) {}
 
-    public function execute(int $userId): float
+    public function execute(User $user): User
     {
-        $user = $this->userRepository->findById($userId);
-        
-        return $user ? $user->getBalance() : 0.0;
+        return $this->userRepository->findByIdWithWallet($user->getId());
     }
 }

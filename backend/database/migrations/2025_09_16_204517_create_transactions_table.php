@@ -10,31 +10,35 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            
+        
             $table->foreignId('wallet_id')
                 ->constrained('wallets')
                 ->onDelete('cascade');
-
-            $table->foreignId('related_wallet')
+        
+            $table->foreignId('related_wallet') // destinatário
                 ->nullable()
                 ->constrained('wallets')
                 ->onDelete('cascade');
-
-            $table->enum('type', ['DEPOSIT', 'TRANSFER', 'REVERSAL']);
-            $table->decimal('amount', 15, 2);
-            
-            $table->enum('status', ['PENDING', 'COMPLETED', 'REVERSED'])
-                  ->default('PENDING');
-
-            $table->foreignId('reference_id')
+        
+            $table->foreignId('reference_id') // transação de referência
                 ->nullable()
                 ->constrained('transactions')
                 ->onDelete('cascade');
-
+        
+            $table->foreignId('user_id') // usuário que fez a transação
+                ->constrained('users')
+                ->onDelete('cascade');
+        
+            $table->enum('type', ['DEPOSIT', 'TRANSFER', 'REVERSAL']);
+            $table->enum('status', ['PENDING', 'COMPLETED', 'REVERSED'])
+                  ->default('PENDING');
+        
+            $table->decimal('amount', 15, 2);
             $table->string('description')->nullable();
-            
+        
             $table->timestamps();
         });
+        
     }
 
     public function down(): void

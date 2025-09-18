@@ -2,24 +2,65 @@
 
 namespace Modules\Wallet\Application\UseCases;
 
-use Modules\Wallet\Domain\Services\WalletServiceInterface;
-
+use Illuminate\Support\Facades\DB;
+use Modules\Shared\Exceptions\InsufficientFundsException;
+use Modules\User\Domain\Repositories\UserRepositoryInterface;
+use Modules\Wallet\Domain\Repositories\WalletRepositoryInterface;
+use Modules\Wallet\Domain\Repositories\TransactionRepositoryInterface;
+use Modules\Wallet\Domain\Enums\TransactionType;
+use Modules\Wallet\Domain\Entities\Transaction;
 class Transfer
 {
     public function __construct(
-        private WalletServiceInterface $walletService
+        private TransactionRepositoryInterface $transactionRepository,
+        private UserRepositoryInterface $userRepository,
+        private WalletRepositoryInterface $walletRepository
     ) {}
 
-    public function execute(int $fromUserId, int $toUserId, float $amount): void
+    public function execute(int $fromUserId, int $toUserId, float $amount): Transaction
     {
-        if ($amount <= 0) {
-            throw new \InvalidArgumentException('Amount must be positive');
-        }
-
         if ($fromUserId === $toUserId) {
             throw new \InvalidArgumentException('Cannot transfer to yourself');
         }
 
-        $this->walletService->transfer($fromUserId, $toUserId, $amount);
+        return DB::transaction(function () use ($fromUserId, $toUserId, $amount) {
+            $fromUser = $this->userRepository->findByIdWithWallet($fromUserId);
+            $toUser = $this->userRepository->findByIdWithWallet($toUserId);
+        
+            if (!$fromUser || !$toUser) {
+                throw new \InvalidArgumentException('User not found');
+            }
+        
+            $fromWallet = $fromUser->getWallet();
+            $toWallet = $toUser->getWallet();
+
+            if (!$fromWallet || !$toWallet) {
+                throw new \InvalidArgumentException('Wallet not found');
+            }
+        
+            if ($fromWallet->getBalance() < $amount) {
+                throw new InsufficientFundsException();
+            }
+        
+            $this->walletRepository->updateBalance(
+                $fromWallet->getId(),
+                $fromWallet->getBalance() - $amount
+            );
+        
+            $this->walletRepository->updateBalance(
+                $toWallet->getId(),
+                $toWallet->getBalance() + $amount
+            );
+        
+            $transaction = Transaction::createNew(
+                $fromWallet->getId(),
+                $fromUserId,
+                TransactionType::TRANSFER,
+                $amount,
+                $toWallet->getId()
+            );
+
+            return $this->transactionRepository->save($transaction);
+        });
     }
 }

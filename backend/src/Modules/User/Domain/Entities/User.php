@@ -2,6 +2,8 @@
 
 namespace Modules\User\Domain\Entities;
 
+use Modules\Wallet\Domain\Entities\Wallet;
+
 class User
 {
     public function __construct(
@@ -9,7 +11,7 @@ class User
         private string $name,
         private string $email,
         private string $password,
-        private float $balance = 0.0,
+        private ?Wallet $wallet = null,
         private ?\DateTime $createdAt = null,
         private ?\DateTime $updatedAt = null
     ) {
@@ -39,9 +41,9 @@ class User
         return $this->password;
     }
 
-    public function getBalance(): float
+    public function getWallet(): ?Wallet
     {
-        return $this->balance;
+        return $this->wallet;
     }
 
     public function getCreatedAt(): \DateTime
@@ -54,11 +56,6 @@ class User
         return $this->updatedAt;
     }
 
-    public function updateBalance(float $amount): void
-    {
-        $this->balance = $amount;
-        $this->updatedAt = new \DateTime();
-    }
 
     public function changeName(string $name): void
     {

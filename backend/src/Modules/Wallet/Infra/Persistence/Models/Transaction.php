@@ -2,41 +2,64 @@
 
 namespace Modules\Wallet\Infra\Persistence\Models;
 
-use App\Models\Wallet;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Wallet\Infra\Persistence\Models\Wallet as WalletModel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\User\Infra\Persistence\Models\User as UserModel;
 
 class Transaction extends Model
 {
-    use HasFactory;
+    protected $table = 'transactions';
 
     protected $fillable = [
         'wallet_id',
         'related_wallet',
+        'user_id',
         'type',
-        'amount',
         'status',
-        'reference_id',
+        'amount',
         'description',
+        'reference_id',
     ];
 
-    public function wallet()
+    protected $casts = [
+        'amount' => 'float',
+        'wallet_id' => 'integer',
+        'related_wallet' => 'integer',
+        'user_id' => 'integer',
+        'reference_id' => 'integer',
+    ];
+
+    /**
+     * Carteira de origem
+     */
+    public function wallet(): BelongsTo
     {
-        return $this->belongsTo(Wallet::class);
+        return $this->belongsTo(WalletModel::class, 'wallet_id');
     }
 
-    public function relatedWallet()
+    /**
+     * Carteira destinatária (nullable)
+     */
+    public function recipientWallet(): BelongsTo
     {
-        return $this->belongsTo(Wallet::class, 'related_wallet');
+        return $this->belongsTo(WalletModel::class, 'related_wallet');
     }
 
-    public function reference()
+    /**
+     * Usuário que fez a transação
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(UserModel::class, 'user_id');
+    }
+
+    /**
+     * Transação de referência (reversão ou link)
+     */
+    public function reference(): BelongsTo
     {
         return $this->belongsTo(Transaction::class, 'reference_id');
-    }
-
-    public function reversals()
-    {
-        return $this->hasMany(Transaction::class, 'reference_id');
     }
 }

@@ -5,12 +5,20 @@ namespace Modules\User\Infra\Persistence\Repositories;
 use Modules\User\Domain\Entities\User;
 use Modules\User\Domain\Repositories\UserRepositoryInterface;
 use Modules\User\Infra\Persistence\Models\User as UserModel;
+use Modules\Wallet\Domain\Entities\Wallet;
 
 class UserRepository implements UserRepositoryInterface
 {
     public function findById(int $id): ?User
     {
         $userModel = UserModel::find($id);
+        
+        return $userModel ? $this->toDomainEntity($userModel) : null;
+    }
+
+    public function findByIdWithWallet(int $id): ?User
+    {
+        $userModel = UserModel::with('wallet')->find($id);
         
         return $userModel ? $this->toDomainEntity($userModel) : null;
     }
@@ -43,12 +51,23 @@ class UserRepository implements UserRepositoryInterface
 
     private function toDomainEntity(UserModel $userModel): User
     {
+        $wallet = null;
+    
+        if ($userModel->relationLoaded('wallet') && $userModel->wallet) {
+            $wallet = new Wallet(
+                $userModel->wallet->id,
+                $userModel->wallet->user_id,
+                $userModel->wallet->balance
+            );
+        }
+    
         return new User(
             $userModel->id,
             $userModel->name,
             $userModel->email,
             $userModel->password,
-            $userModel->balance ?? 0.0
+            $wallet
         );
     }
+    
 }

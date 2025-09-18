@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Modules\Shared\Exceptions\GlobalExceptionHandler;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,13 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        /**
-         * Default exception handler
-         */
         $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*')) {
-                return $e;
+                return GlobalExceptionHandler::handle($e, true);
             }
+    
+            return null; 
         });
     })->create();   
 

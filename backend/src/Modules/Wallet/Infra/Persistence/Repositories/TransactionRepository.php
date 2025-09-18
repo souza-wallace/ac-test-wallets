@@ -3,6 +3,7 @@
 namespace Modules\Wallet\Infra\Persistence\Repositories;
 
 use Modules\Wallet\Domain\Entities\Transaction;
+use Modules\Wallet\Domain\Enums\TransactionStatus;
 use Modules\Wallet\Domain\Repositories\TransactionRepositoryInterface;
 use Modules\Wallet\Domain\Enums\TransactionType;
 use Modules\Wallet\Infra\Persistence\Models\Transaction as TransactionModel;
@@ -13,9 +14,11 @@ class TransactionRepository implements TransactionRepositoryInterface
     {
         $transactionModel = new TransactionModel([
             'user_id' => $transaction->getUserId(),
+            'wallet_id' => $transaction->getWalletId(),
             'type' => $transaction->getType()->value,
             'amount' => $transaction->getAmount(),
-            'recipient_id' => $transaction->getRecipientId()
+            'related_wallet' => $transaction->getRecipientWalletId(),
+            'status' => $transaction->getStatus()
         ]);
         
         $transactionModel->save();
@@ -30,24 +33,27 @@ class TransactionRepository implements TransactionRepositoryInterface
         return $transactionModel ? $this->toDomainEntity($transactionModel) : null;
     }
 
-    public function findByUserId(int $userId): array
+    public function findByUserId(int $userId)
     {
-        $transactionModels = TransactionModel::where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->get();
-        
-        return $transactionModels->map(fn($model) => $this->toDomainEntity($model))->toArray();
+        return TransactionModel::where('user_id', $userId)
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
     }
 
     private function toDomainEntity(TransactionModel $transactionModel): Transaction
     {
-        return new Transaction(
+
+        return Transaction::reconstitute(
             $transactionModel->id,
+            $transactionModel->wallet_id,
             $transactionModel->user_id,
             TransactionType::from($transactionModel->type),
-            $transactionModel->amount,
-            $transactionModel->recipient_id,
-            $transactionModel->created_at
+            (float)$transactionModel->amount,
+            $transactionModel->related_wallet,
+            $transactionModel->description,
+            $transactionModel->reference_id,
+            TransactionStatus::PENDING,
+            $transactionModel->created_at?->toDateTime()
         );
     }
 }
