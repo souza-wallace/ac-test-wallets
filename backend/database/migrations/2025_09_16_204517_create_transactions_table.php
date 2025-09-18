@@ -35,7 +35,7 @@ return new class extends Migration
         
             $table->decimal('amount', 15, 2);
             $table->string('description')->nullable();
-        
+            $table->boolean('can_reverse')->default(true);
             $table->timestamps();
         });
         

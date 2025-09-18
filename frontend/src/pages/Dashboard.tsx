@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { api, Transaction } from "@/services/api";
 import { 
   Wallet, 
   ArrowUpRight, 
@@ -15,22 +17,82 @@ import {
   LogOut 
 } from "lucide-react";
 
-interface Transaction {
-  id: string;
-  type: "deposit" | "transfer_in" | "transfer_out";
-  amount: number;
-  description: string;
-  date: string;
-  status: "completed" | "pending" | "failed";
-}
-
 const Dashboard = () => {
   const [showBalance, setShowBalance] = useState(true);
-  const [balance] = useState(2350.75);
-  const [userName] = useState("João Silva");
-  const [userEmail] = useState("joao.silva@email.com");
-  
-  const recentTransactions: Transaction[] = [
+  const [balance, setBalance] = useState(0);
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    loadUserData();
+    loadRecentTransactions();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const response = await api.getUserProfile();
+      if (response.error) {
+        toast({
+          title: "Erro ao carregar dados",
+          description: response.error,
+          variant: "destructive",
+        });
+      } else if (response.data) {
+        setUserName(response.data.name);
+        setUserEmail(response.data.email);
+        setBalance(response.data.wallet?.balance || 0);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível carregar os dados do usuário",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadRecentTransactions = async () => {
+    try {
+      const response = await api.getTransactions(1, 3);
+      if (response.error) {
+        toast({
+          title: "Erro ao carregar transações",
+          description: response.error,
+          variant: "destructive",
+        });
+      } else {
+        setRecentTransactions(response.data?.slice(0, 3) || []);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível carregar as transações",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
+  const getTransactionType = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'deposit': return 'deposit';
+      case 'transfer': return 'transfer_out';
+      case 'reversal': return 'transfer_in';
+      default: return 'deposit';
+    }
+  };
+
+  const mockTransactions: any[] = [
     {
       id: "1",
       type: "deposit",
@@ -91,13 +153,16 @@ const Dashboard = () => {
     const statusMap = {
       completed: { label: "Concluída", variant: "default" as const },
       pending: { label: "Pendente", variant: "secondary" as const },
-      failed: { label: "Falhou", variant: "destructive" as const }
+      reversed: { label: "Revertida", variant: "destructive" as const },
     };
-    
-    const config = statusMap[status as keyof typeof statusMap];
+  
+    const key = status.toLowerCase() as keyof typeof statusMap;
+    const config = statusMap[key];
+    if (!config) return <Badge variant="outline">Desconhecido</Badge>;
+  
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
-
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -123,7 +188,7 @@ const Dashboard = () => {
                 <p className="text-xs text-muted-foreground">{userEmail}</p>
               </div>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               Sair
             </Button>
@@ -220,32 +285,46 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-card-hover transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-muted/50 rounded-full flex items-center justify-center">
-                        {getTransactionIcon(transaction.type)}
-                      </div>
-                      <div>
-                        <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(transaction.date)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <p className={`font-semibold ${
-                        transaction.amount > 0 ? 'text-success' : 'text-destructive'
-                      }`}>
-                        {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
-                      </p>
-                      {getStatusBadge(transaction.status)}
-                    </div>
+                {loading ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Carregando transações...</p>
                   </div>
-                ))}
+                ) : recentTransactions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <History className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">Nenhuma transação encontrada</p>
+                  </div>
+                ) : (
+                  recentTransactions.map((transaction) => {
+                    const transactionType = getTransactionType(transaction.type);
+                    return (
+                      <div
+                        key={transaction.id}
+                        className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-card-hover transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-muted/50 rounded-full flex items-center justify-center">
+                            {getTransactionIcon(transactionType)}
+                          </div>
+                          <div>
+                            <p className="font-medium">{transaction.description || 'Transação'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {formatDate(transaction.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right space-y-1">
+                          <p className={`font-semibold ${
+                            transactionType === 'deposit' || transactionType === 'transfer_in' ? 'text-success' : 'text-destructive'
+                          }`}>
+                            {(transactionType === 'deposit' || transactionType === 'transfer_in') ? '+' : '-'}{formatCurrency(Math.abs(transaction.amount))}
+                          </p>
+                          {getStatusBadge(transaction.status)}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </CardContent>
           </Card>
