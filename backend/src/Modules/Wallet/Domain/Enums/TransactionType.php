@@ -4,7 +4,7 @@ namespace Modules\Wallet\Domain\Enums;
 
 enum TransactionType: string
 {
-    case DEPOSIT = 'deposit';
-    case TRANSFER = 'transfer';
-    case REVERSAL = 'reversal';
+    case DEPOSIT = 'DEPOSIT';
+    case TRANSFER = 'TRANSFER';
+    case REVERSAL = 'REVERSAL';
 }

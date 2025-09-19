@@ -4,10 +4,14 @@ namespace Modules\Wallet\Infra\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Shared\Exceptions\GlobalExceptionHandler;
 use Modules\Wallet\Application\UseCases\Deposit;
 use Modules\Wallet\Application\UseCases\Transfer;
 use Modules\Wallet\Application\UseCases\ReverseTransaction;
 use Modules\Wallet\Application\UseCases\GetTransactions;
+use Modules\Wallet\Infra\Requests\TransferRequest;
+use Modules\Wallet\Infra\Responses\TransactionResponse;
+use Modules\Wallet\Infra\Responses\WalletResponse;
 
 class WalletController extends Controller
 {
@@ -20,32 +24,33 @@ class WalletController extends Controller
 
     public function deposit(Request $request)
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:0.01'
-        ]);
-
         try {
-            $userId = $request->get('auth_user')->getId();
-            $this->deposit->execute($userId, $request->amount);
-            return response()->json(['message' => 'Deposit successful']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            $request->validate([
+                'amount' => 'required|numeric|min:0.01'
+            ]);
+
+            $userId = $request->attributes->get('user')->getId();
+
+            $transaction = $this->deposit->execute($userId, $request->amount);
+
+            return WalletResponse::deposit($transaction);
+            
+        } catch (\Throwable $exception) {
+            return GlobalExceptionHandler::handle($exception, true);
         }
     }
 
-    public function transfer(Request $request)
+    public function transfer(TransferRequest $request)
     {
-        $request->validate([
-            'to_user_id' => 'required|integer',
-            'amount' => 'required|numeric|min:0.01'
-        ]);
-
         try {
-            $fromUserId = $request->get('auth_user')->getId();
-            $this->transfer->execute($fromUserId, $request->to_user_id, $request->amount);
-            return response()->json(['message' => 'Transfer successful']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            $user = $request->attributes->get('user');
+
+            $transaction = $this->transfer->execute($user, $request->email, $request->amount, $request->description);
+            
+            return WalletResponse::transfer($transaction);
+
+        } catch (\Throwable $exception) {
+            return GlobalExceptionHandler::handle($exception, true);
         }
     }
 
@@ -53,16 +58,25 @@ class WalletController extends Controller
     {
         try {
             $this->reverseTransaction->execute($transactionId);
+
             return response()->json(['message' => 'Transaction reversed successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            
+        } catch (\Throwable $exception) {
+            return GlobalExceptionHandler::handle($exception, true);
         }
     }
 
     public function getTransactions(Request $request)
     {
-        $userId = $request->get('auth_user')->getId();
-        $transactions = $this->getTransactions->execute($userId);
-        return response()->json(['transactions' => $transactions]);
+        try {
+            $userId = $request->attributes->get('user')->getId();
+
+            $transactions = $this->getTransactions->execute($userId);
+        
+            return response()->json(TransactionResponse::collection($transactions));
+            
+        } catch (\Throwable $exception) {
+            return GlobalExceptionHandler::handle($exception, true);
+        }
     }
 }

@@ -2,20 +2,43 @@
 
 namespace Modules\Wallet\Application\UseCases;
 
-use Modules\Wallet\Domain\Services\WalletServiceInterface;
+use Illuminate\Support\Facades\DB;
+use Modules\Shared\Exceptions\UserNotfoundException;
+use Modules\User\Domain\Repositories\UserRepositoryInterface;
+use Modules\Wallet\Domain\Repositories\WalletRepositoryInterface;
+use Modules\Wallet\Domain\Repositories\TransactionRepositoryInterface;
+use Modules\Wallet\Domain\Enums\TransactionType;
+use Modules\Wallet\Domain\Entities\Transaction;
 
 class Deposit
 {
     public function __construct(
-        private WalletServiceInterface $walletService
+        private UserRepositoryInterface $userRepository,
+        private WalletRepositoryInterface $walletRepository,
+        private TransactionRepositoryInterface $transactionRepository,
     ) {}
 
-    public function execute(int $userId, float $amount): void
+    public function execute(int $userId, float $amount): Transaction
     {
-        if ($amount <= 0) {
-            throw new \InvalidArgumentException('Amount must be positive');
-        }
+        return DB::transaction(function () use ($userId, $amount) {
+            $user = $this->userRepository->findById($userId);
+            if (!$user) {
+                throw new UserNotfoundException();
+            }
 
-        $this->walletService->deposit($userId, $amount);
+            $wallet = $this->walletRepository->findByUserId($userId);
+
+            $newBalance = $wallet->getBalance() + $amount;
+            $this->walletRepository->updateBalance($wallet->getId(), $newBalance);
+
+            $transaction = Transaction::create(
+                $userId,
+                $wallet->getId(),
+                TransactionType::DEPOSIT,
+                $amount
+            );
+
+            return $this->transactionRepository->save($transaction);
+        });
     }
 }

@@ -83,7 +83,7 @@ class GlobalExceptionHandler
 
     private static function handleGeneral(\Throwable $exception, bool $shouldExpose): JsonResponse
     {
-        self::logException('General error', $exception, 'error', ['trace' => $exception->getTraceAsString()]);
+        self::logException('General error', $exception, 'error');
         
         $response = [
             'error' => 'Internal server error',

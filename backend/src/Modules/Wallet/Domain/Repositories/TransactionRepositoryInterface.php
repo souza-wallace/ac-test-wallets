@@ -8,5 +8,5 @@ interface TransactionRepositoryInterface
 {
     public function save(Transaction $transaction): Transaction;
     public function findById(int $id): ?Transaction;
-    public function findByUserId(int $userId): array;
+    public function findByUserId(int $userId);
 }

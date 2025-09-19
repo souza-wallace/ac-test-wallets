@@ -6,23 +6,18 @@ use App\Http\Controllers\Controller;
 use Modules\User\Application\DTOs\RegisterUserDto;
 use Modules\User\Infra\Requests\RegisterUserRequest;
 use Illuminate\Http\Request;
-use Modules\User\Application\UseCases\GetUserBalance;
 use Modules\User\Application\UseCases\RegisterUser;
 use Modules\User\Infra\Responses\UserResponse;
 use Modules\Shared\Exceptions\GlobalExceptionHandler;
+use Modules\User\Application\UseCases\GetUser;
+use Modules\User\Domain\Entities\User;
 
 class UserController extends Controller
 {
     public function __construct(
-        private GetUserBalance $getUserBalance,
         private RegisterUser $registerUser,
-
+        private GetUser $getUser
     ) {}
-
-    public function index(Request $request)
-    {
-        return response()->json('aqui');
-    }
 
     public function store(RegisterUserRequest $request)
     {
@@ -43,10 +38,17 @@ class UserController extends Controller
         }
     }
 
-    public function getBalance(Request $request, int $userId)
-    {
-        $balance = $this->getUserBalance->execute($userId);
+    public function show(Request $request, Int $id){
+        try {
+            $user = $request->attributes->get('user');
 
-        return response()->json(['balance' => $balance]);
+            $user = $this->getUser->execute($user);
+
+            return UserResponse::show($user);
+
+        } catch (\Throwable $exception) {
+            return GlobalExceptionHandler::handle($exception, true);
+
+        }
     }
 }

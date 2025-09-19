@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/services/api";
 import { ArrowLeft, ArrowUpRight, Wallet, User, DollarSign } from "lucide-react";
 
 const Transferencia = () => {
@@ -14,8 +15,37 @@ const Transferencia = () => {
     description: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [currentBalance] = useState(2350.75);
+  const [currentBalance, setCurrentBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    loadUserBalance();
+  }, []);
+
+  const loadUserBalance = async () => {
+    try {
+      const response = await api.getUserProfile();
+      if (response.error) {
+        toast({
+          title: "Erro ao carregar saldo",
+          description: response.error,
+          variant: "destructive",
+        });
+      } else if (response.data) {
+        setCurrentBalance(response.data.wallet?.balance || 0);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível carregar o saldo",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -53,22 +83,49 @@ const Transferencia = () => {
 
     setIsLoading(true);
 
-    // Simular chamada para o backend
-    setTimeout(() => {
+    try {
+      // Aqui você precisaria buscar o ID do usuário pelo email
+      // Por simplicidade, vou usar um ID fixo (2) para teste
+      const toUserId = 2; // Em produção, buscar pelo email
+      
+      const response = await api.transfer(formData.recipientEmail, amount, formData.description);
+      
+      if (response.error) {
+        toast({
+          title: "Erro na transferência",
+          description: response.error || response.details,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Transferência realizada!",
+          description: `${formatCurrency(amount)} enviado com sucesso`,
+        });
+        
+        // Reset form e atualiza saldo
+        setFormData({
+          recipientEmail: "",
+          amount: "",
+          description: "",
+        });
+        
+        // Recarrega o saldo
+        loadUserBalance();
+        
+        // Redireciona para dashboard após 2 segundos
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      }
+    } catch (error) {
       toast({
-        title: "Transferência realizada!",
-        description: `${formatCurrency(amount)} enviado para ${formData.recipientEmail}`,
+        title: "Erro de conexão",
+        description: "Não foi possível processar a transferência",
+        variant: "destructive",
       });
-      
-      // Reset form
-      setFormData({
-        recipientEmail: "",
-        amount: "",
-        description: "",
-      });
-      
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -102,7 +159,9 @@ const Transferencia = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-primary-foreground/70 text-sm">Saldo disponível</p>
-                  <p className="text-2xl font-bold">{formatCurrency(currentBalance)}</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? "Carregando..." : formatCurrency(currentBalance)}
+                  </p>
                 </div>
                 <Wallet className="w-8 h-8 text-primary-foreground/70" />
               </div>

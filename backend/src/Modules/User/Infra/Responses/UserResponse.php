@@ -15,7 +15,6 @@ class UserResponse
                 'id' => $user->getId(),
                 'name' => $user->getName(),
                 'email' => $user->getEmail(),
-                'balance' => $user->getBalance()
             ]
         ], 201);
     }
@@ -27,7 +26,15 @@ class UserResponse
                 'id' => $user->getId(),
                 'name' => $user->getName(),
                 'email' => $user->getEmail(),
-                'balance' => $user->getBalance()
+                'wallet' => $user->getWallet()
+                ? [
+                    'id' => $user->getWallet()->getId(),
+                    'userId' => $user->getWallet()->getUserId(),
+                    'balance' => $user->getWallet()->getBalance(),
+                    'createdAt' => $user->getWallet()->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'updatedAt' => $user->getWallet()->getUpdatedAt()->format('Y-m-d H:i:s'),
+                ]
+                : null,
             ]
         ]);
     }

@@ -1,0 +1,213 @@
+{
+	"info": {
+		"_postman_id": "fe826d18-8b52-42dd-a4dc-29e1ed7c9687",
+		"name": "ACTest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "20798479"
+	},
+	"item": [
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "store",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "wallace",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "mara1@gmail.comm",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "123456",
+									"type": "text"
+								}
+							]
+						},
+						"url": "127.0.0.1:8001/api/users"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "alice@example.com",
+									"description": "email existente",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "123456",
+									"description": "senha do usuario",
+									"type": "text"
+								}
+							]
+						},
+						"url": "127.0.0.1:8001/api/login"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Wallet",
+			"item": [
+				{
+					"name": "Deposit",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "amount",
+									"value": "1000",
+									"description": "valor para deposito",
+									"type": "text"
+								}
+							]
+						},
+						"url": "127.0.0.1:8001/api/wallet/deposit"
+					},
+					"response": []
+				},
+				{
+					"name": "Transfer",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "amount",
+									"value": "100",
+									"description": "valor",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "mara1@gmail.comm",
+									"description": "usuario que ira receber",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "teste",
+									"description": "descricao (opcional)",
+									"type": "text"
+								}
+							]
+						},
+						"url": "127.0.0.1:8001/api/wallet/transfer"
+					},
+					"response": []
+				},
+				{
+					"name": "Transactions",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "127.0.0.1:8001/api/wallet/transactions?page=1&per_page=15",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"wallet",
+								"transactions"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "15"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reverse",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": "127.0.0.1:8001/api/wallet/transactions/2/reverse"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": {
+			"token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3YWxsZXQtYXBwIiwiaWF0IjoxNzU4Mjg5OTY5LjEyMzQ3NywiZXhwIjoxNzU4MjkzNTY5LjEyMzQ3NywidXNlcl9pZCI6MSwiZW1haWwiOiJhbGljZUBleGFtcGxlLmNvbSJ9.g7YLQGKmwBet9yCyElsFM8zW9Q9vSvfYT9nnkrHZ4Zo"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

@@ -26,7 +26,7 @@ class JwtAuthMiddleware
             return response()->json(['message' => 'Invalid token'], 401);
         }
 
-        $request->merge(['auth_user' => $user]);
+        $request->attributes->set('user', $user);
 
         return $next($request);
     }

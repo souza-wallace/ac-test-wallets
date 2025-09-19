@@ -2,7 +2,7 @@
 
 namespace Modules\Wallet\Domain\Entities;
 
-use Modules\Shared\Exceptions\InsufficientFundsException;
+use Modules\Shared\Exceptions\InsufficientBalanceException;
 
 class Wallet
 {
@@ -40,34 +40,5 @@ class Wallet
     public function getUpdatedAt(): \DateTime
     {
         return $this->updatedAt;
-    }
-
-    public function deposit(float $amount): void
-    {
-        if ($amount <= 0) {
-            throw new \InvalidArgumentException('Amount must be positive');
-        }
-
-        $this->balance += $amount;
-        $this->updatedAt = new \DateTime();
-    }
-
-    public function withdraw(float $amount): void
-    {
-        if ($amount <= 0) {
-            throw new \InvalidArgumentException('Amount must be positive');
-        }
-
-        if ($this->balance < $amount) {
-            throw new InsufficientFundsException();
-        }
-
-        $this->balance -= $amount;
-        $this->updatedAt = new \DateTime();
-    }
-
-    public function canWithdraw(float $amount): bool
-    {
-        return $this->balance >= $amount && $amount > 0;
     }
 }
