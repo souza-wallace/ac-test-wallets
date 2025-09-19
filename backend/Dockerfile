@@ -27,7 +27,7 @@ RUN chown -R www-data:www-data /var/www
 RUN composer install --no-dev --optimize-autoloader
 
 # Expõe a porta padrão do Artisan
-EXPOSE 8000
+EXPOSE 8001
 
 # Sobe o servidor embutido
 CMD php artisan serve --host=0.0.0.0 --port=8000

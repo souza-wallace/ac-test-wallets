@@ -4,6 +4,7 @@ namespace Modules\Wallet\Application\UseCases;
 
 use Illuminate\Support\Facades\DB;
 use Modules\Shared\Exceptions\InsufficientBalanceException;
+use Modules\Shared\Exceptions\UserNotfoundException;
 use Modules\User\Domain\Entities\User;
 use Modules\User\Domain\Repositories\UserRepositoryInterface;
 use Modules\Wallet\Domain\Repositories\WalletRepositoryInterface;
@@ -29,7 +30,7 @@ class Transfer
             $toUser = $this->userRepository->findByEmailWithWallet($toUserEmail);
         
             if (!$fromUser || !$toUser) {
-                throw new \InvalidArgumentException('User not found');
+                throw new UserNotfoundException();
             }
         
             $fromWallet = $fromUser->getWallet();

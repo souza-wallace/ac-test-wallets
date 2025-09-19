@@ -13,6 +13,7 @@ use Modules\Wallet\Domain\Repositories\TransactionRepositoryInterface;
 use Modules\Wallet\Infra\Persistence\Repositories\TransactionRepository;
 use Faker\Factory as Faker;
 use Modules\Shared\Exceptions\InsufficientBalanceException;
+use Modules\Shared\Exceptions\UserNotfoundException;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -45,7 +46,7 @@ test('Transfer should throw InvalidArgumentException for non-existent user', fun
     $transfer = app(Transfer::class);
     
     expect(fn() => $transfer->execute($fromUser, 100000, 250.0))
-        ->toThrow(InvalidArgumentException::class, 'User not found');
+        ->toThrow(UserNotfoundException::class);
 });
 
 // Teste para transferência para si mesmo

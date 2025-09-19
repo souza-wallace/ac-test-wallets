@@ -11,6 +11,7 @@ use Modules\Wallet\Infra\Persistence\Repositories\WalletRepository;
 use Modules\Wallet\Domain\Repositories\TransactionRepositoryInterface;
 use Modules\Wallet\Infra\Persistence\Repositories\TransactionRepository;
 use Faker\Factory as Faker;
+use Modules\Shared\Exceptions\UserNotfoundException;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -46,5 +47,5 @@ test('deposit must return userNotFoundException', function () {
     $deposit = app(Deposit::class);
 
     expect(fn() => $deposit->execute(1000, $amount))
-    ->toThrow(InvalidArgumentException::class, 'User not found');
+    ->toThrow(UserNotfoundException::class);
 });  

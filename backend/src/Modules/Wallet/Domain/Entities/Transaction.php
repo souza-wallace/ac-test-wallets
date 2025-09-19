@@ -24,6 +24,20 @@ class Transaction
     // ========================
     // FACTORY METHODS
     // ========================
+       /**
+     * Cria uma nova transação de carteira.
+     *
+     * @param int              $walletId          ID da carteira de origem da transação.
+     * @param int              $userId            ID do usuário responsável pela transação.
+     * @param TransactionType  $type              Tipo da transação (ex.: DEPOSIT, TRANSFER, REVERSAL).
+     * @param float            $amount            Valor da transação
+     * @param int|null         $recipientWalletId ID da carteira de destino (usado em transferências).
+     * @param string|null      $description       Descrição ou observação da transação.
+     * @param int|null         $referenceId       ID de referência para relacionar com outra transação (ex.: reversão).
+     * @param bool             $canReverse        Indica se a transação pode ser revertida (padrão: true).
+     *
+     * @return self
+     */
     public static function create(
         int $walletId,
         int $userId,
@@ -53,6 +67,7 @@ class Transaction
 
         return $transaction;
     }
+
 
     public static function reconstitute(
         ?int $id,

@@ -11,6 +11,22 @@ export interface LoginData {
   password: string;
 }
 
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+export interface Wallet {
+  id: number;
+  user_id: number;
+  balance: string;
+  created_at: string | null;
+  updated_at: string | null;
+  user: User;
+}
+
 export interface Transaction {
   id: number;
   wallet_id: number;
@@ -23,6 +39,8 @@ export interface Transaction {
   status: string;
   created_at: string;
   can_reverse?: boolean;
+  recipient_wallet?: Wallet
+
 }
 
 export interface ApiResponse<T> {

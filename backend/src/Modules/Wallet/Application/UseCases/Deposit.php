@@ -3,12 +3,12 @@
 namespace Modules\Wallet\Application\UseCases;
 
 use Illuminate\Support\Facades\DB;
+use Modules\Shared\Exceptions\UserNotfoundException;
 use Modules\User\Domain\Repositories\UserRepositoryInterface;
 use Modules\Wallet\Domain\Repositories\WalletRepositoryInterface;
 use Modules\Wallet\Domain\Repositories\TransactionRepositoryInterface;
 use Modules\Wallet\Domain\Enums\TransactionType;
 use Modules\Wallet\Domain\Entities\Transaction;
-use Modules\Wallet\Domain\Entities\Wallet;
 
 class Deposit
 {
@@ -23,7 +23,7 @@ class Deposit
         return DB::transaction(function () use ($userId, $amount) {
             $user = $this->userRepository->findById($userId);
             if (!$user) {
-                throw new \InvalidArgumentException('User not found');
+                throw new UserNotfoundException();
             }
 
             $wallet = $this->walletRepository->findByUserId($userId);

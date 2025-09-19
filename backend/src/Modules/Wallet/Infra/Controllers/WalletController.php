@@ -30,8 +30,11 @@ class WalletController extends Controller
             ]);
 
             $userId = $request->attributes->get('user')->getId();
+
             $transaction = $this->deposit->execute($userId, $request->amount);
+
             return WalletResponse::deposit($transaction);
+            
         } catch (\Throwable $exception) {
             return GlobalExceptionHandler::handle($exception, true);
         }
@@ -46,7 +49,6 @@ class WalletController extends Controller
             
             return WalletResponse::transfer($transaction);
 
-            return response()->json(['message' => 'Transfer successful']);
         } catch (\Throwable $exception) {
             return GlobalExceptionHandler::handle($exception, true);
         }

@@ -206,61 +206,6 @@ const Dashboard = () => {
               </Card>
             </Link>
           </div>
-
-          {/* Recent Transactions */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Transações Recentes</CardTitle>
-                <Link to="/historico">
-                  <Button variant="outline" size="sm">
-                    Ver todas
-                  </Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {loading ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Carregando...</p>
-                  </div>
-                ) : recentTransactions.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Nenhuma transação recente</p>
-                  </div>
-                ) : (
-                  recentTransactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="flex items-center justify-between p-3 rounded-lg border"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                          {getTransactionIcon(transaction.type)}
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">
-                            {transaction.description || 'Transação'}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(transaction.created_at)}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="text-right">
-                        <p className="font-semibold text-sm">
-                          {formatCurrency(transaction.amount)}
-                        </p>
-                        {getStatusBadge(transaction.status)}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

@@ -17,9 +17,11 @@ import {
 const Historico = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [User, setUser] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
+    loadUserData();
     loadTransactions();
   }, []);
 
@@ -45,6 +47,28 @@ const Historico = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUserData = async () => {
+    try {
+      const response = await api.getUserProfile();
+      if (response.error) {
+        toast({
+          title: "Erro ao carregar dados",
+          description: response.error,
+          variant: "destructive",
+        });
+      } else if (response.data) {
+        console.log(response.data)
+        setUser(response.data);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível carregar os dados do usuário",
+        variant: "destructive",
+      });
     }
   };
 
@@ -153,51 +177,61 @@ const Historico = () => {
                   <p className="text-muted-foreground">Nenhuma transação encontrada</p>
                 </div>
               ) : (
-                transactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 rounded-lg border"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                        {getTransactionIcon(transaction.type)}
+                transactions.map((transaction) => {
+                  const isSent = transaction.type === "TRANSFER" && User && transaction.user_id === User.id;
+                  const isReceived = transaction.type === "TRANSFER" && User && transaction.user_id !== User.id;
+                
+                  return (
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between p-4 rounded-lg border"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                          {getTransactionIcon(transaction.type)}aaa
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-medium">
+                            {transaction.description || "Transação"}
+                          </p>
+                
+                          <p className="font-medium">
+                            {isSent && `To: ${transaction?.recipient_wallet?.user.name}`}
+                            {isReceived && `From: ${transaction?.user?.name}`}
+                          </p>
+                
+                          <p className="text-sm text-muted-foreground">
+                            {formatDate(transaction.created_at)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="font-medium">
-                          {transaction.description || 'Transação'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(transaction.created_at)}
-                        </p>
+                
+                      <div className="text-right space-y-2">
+                        <div className="space-y-1">
+                          <p className="font-semibold">{formatCurrency(transaction.amount)}</p>
+                          {getStatusBadge(transaction.status)}
+                        </div>
+                
+                        {transaction.can_reverse && transaction.status === "COMPLETED" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReverseTransaction(transaction.id)}
+                            className="text-xs"
+                          >
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Reverter
+                          </Button>
+                        )}
+                
+                        {!transaction.can_reverse && transaction.status === "COMPLETED" && (
+                          <Badge variant="outline">Revertida</Badge>
+                        )}
                       </div>
                     </div>
-                    
-                    <div className="text-right space-y-2">
-                      <div className="space-y-1">
-                        <p className="font-semibold">
-                          {formatCurrency(transaction.amount)}
-                        </p>
-                        {getStatusBadge(transaction.status)}
-                      </div>
-                      
-                      {transaction.can_reverse && transaction.status === "COMPLETED" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleReverseTransaction(transaction.id)}
-                          className="text-xs"
-                        >
-                          <RotateCcw className="w-3 h-3 mr-1" />
-                          Reverter
-                        </Button>
-                      )}
-
-                      {!transaction.can_reverse && transaction.status === "COMPLETED" && (
-                       <Badge variant="outline">Revertida</Badge>
-                      )}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
+                
               )}
             </div>
           </CardContent>

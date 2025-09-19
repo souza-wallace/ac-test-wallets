@@ -41,33 +41,4 @@ class Wallet
     {
         return $this->updatedAt;
     }
-
-    public function deposit(float $amount): void
-    {
-        if ($amount <= 0) {
-            throw new \InvalidArgumentException('Amount must be positive');
-        }
-
-        $this->balance += $amount;
-        $this->updatedAt = new \DateTime();
-    }
-
-    public function withdraw(float $amount): void
-    {
-        if ($amount <= 0) {
-            throw new \InvalidArgumentException('Amount must be positive');
-        }
-
-        if ($this->balance < $amount) {
-            throw new InsufficientBalanceException();
-        }
-
-        $this->balance -= $amount;
-        $this->updatedAt = new \DateTime();
-    }
-
-    public function canWithdraw(float $amount): bool
-    {
-        return $this->balance >= $amount && $amount > 0;
-    }
 }
