@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet, Mail, Lock } from "lucide-react";
-import { api } from "@/services/api";
+import { api } from "../services/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -28,8 +28,9 @@ const Login = () => {
           description: response.error || "Credenciais inválidas",
           variant: "destructive",
         });
-      } else if (response.token) {
-        localStorage.setItem('token', response.token);
+      } else if (response.data) {
+
+        localStorage.setItem('token', response.data);
         toast({
           title: "Login realizado com sucesso!",
           description: "Redirecionando para o dashboard...",

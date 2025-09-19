@@ -30,6 +30,7 @@ class Transaction extends Model
         'related_wallet' => 'integer',
         'user_id' => 'integer',
         'reference_id' => 'integer',
+        'can_reverse' => 'boolean',
     ];
 
     /**

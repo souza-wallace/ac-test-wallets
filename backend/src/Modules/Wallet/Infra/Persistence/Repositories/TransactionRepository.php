@@ -43,9 +43,15 @@ class TransactionRepository implements TransactionRepositoryInterface
     public function findByUserId(int $userId)
     {
         return TransactionModel::where('user_id', $userId)
+        ->orWhere('related_wallet', function($query) use ($userId) {
+            $query->select('id')
+                    ->from('wallets')
+                    ->where('user_id', $userId);
+        })
         ->orderBy('created_at', 'desc')
         ->paginate(10);
     }
+    
 
     private function toDomainEntity(TransactionModel $transactionModel): Transaction
     {
@@ -59,7 +65,7 @@ class TransactionRepository implements TransactionRepositoryInterface
             $transactionModel->related_wallet,
             $transactionModel->description,
             $transactionModel->reference_id,
-            TransactionStatus::PENDING,
+            TransactionStatus::COMPLETED,
             $transactionModel->created_at?->toDateTime()
         );
     }

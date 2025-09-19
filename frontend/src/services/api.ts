@@ -22,6 +22,7 @@ export interface Transaction {
   reference_id?: number;
   status: string;
   created_at: string;
+  can_reverse?: boolean;
 }
 
 export interface ApiResponse<T> {
@@ -115,6 +116,19 @@ export const api = {
       body: JSON.stringify({
         amount: amount,
       }),
+    });
+    
+    return response.json();
+  },
+
+  reverseTransaction: async (transactionId: number): Promise<ApiResponse<any>> => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/wallet/transactions/${transactionId}/reverse`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
     });
     
     return response.json();
