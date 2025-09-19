@@ -1,14 +1,16 @@
+version: "3.8"
+
 services:
   laravel:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: laravel_app
     restart: unless-stopped
     volumes:
-      - ./:/var/www
+      - ./backend:/var/www
     ports:
-      - "8001:8000"
+      - "8001:8000" # Laravel Artisan
     networks:
       - laravel
     depends_on:
@@ -26,6 +28,18 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - laravel
+
+  frontend:
+    image: node:20
+    container_name: react_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "8080:8080"
     networks:
       - laravel
 
