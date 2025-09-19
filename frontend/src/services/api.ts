@@ -85,4 +85,38 @@ export const api = {
     
     return response.json();
   },
+
+  transfer: async (toUserEmail: string, amount: number, description: string|null): Promise<ApiResponse<any>> => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/wallet/transfer`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        email: toUserEmail,
+        amount: amount,
+        description: description
+      }),
+    });
+    
+    return response.json();
+  },
+
+  deposit: async (amount: number): Promise<ApiResponse<any>> => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/wallet/deposit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        amount: amount,
+      }),
+    });
+    
+    return response.json();
+  },
 };

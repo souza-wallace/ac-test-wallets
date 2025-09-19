@@ -1,18 +1,48 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/services/api";
 import { ArrowLeft, Plus, Wallet, DollarSign, CreditCard, QrCode } from "lucide-react";
 
 const Deposito = () => {
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentBalance] = useState(2350.75);
+  const [currentBalance, setCurrentBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    loadUserBalance();
+  }, []);
+
+  const loadUserBalance = async () => {
+    try {
+      const response = await api.getUserProfile();
+      if (response.error) {
+        toast({
+          title: "Erro ao carregar saldo",
+          description: response.error,
+          variant: "destructive",
+        });
+      } else if (response.data) {
+        setCurrentBalance(response.data.wallet?.balance || 0);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível carregar o saldo",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -35,16 +65,40 @@ const Deposito = () => {
 
     setIsLoading(true);
 
-    // Simular chamada para o backend
-    setTimeout(() => {
-      toast({
-        title: "Depósito realizado!",
-        description: `${formatCurrency(depositAmount)} adicionado à sua conta via ${method}`,
-      });
+    try {
+      const response = await api.deposit(depositAmount);
       
-      setAmount("");
+      if (response.error) {
+        toast({
+          title: "Erro no depósito",
+          description: response.error || response.details,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Depósito realizado!",
+          description: `${formatCurrency(depositAmount)} adicionado à sua conta`,
+        });
+        
+        setAmount("");
+        
+        // Recarrega o saldo
+        loadUserBalance();
+        
+        // Redireciona para dashboard após 2 segundos
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      }
+    } catch (error) {
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível processar o depósito",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const quickAmounts = [50, 100, 200, 500];
@@ -80,7 +134,9 @@ const Deposito = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-success-foreground/70 text-sm">Saldo atual</p>
-                  <p className="text-2xl font-bold">{formatCurrency(currentBalance)}</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? "Carregando..." : formatCurrency(currentBalance)}
+                  </p>
                 </div>
                 <Wallet className="w-8 h-8 text-success-foreground/70" />
               </div>
