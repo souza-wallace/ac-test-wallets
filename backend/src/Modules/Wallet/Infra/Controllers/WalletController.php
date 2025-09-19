@@ -9,6 +9,7 @@ use Modules\Wallet\Application\UseCases\Deposit;
 use Modules\Wallet\Application\UseCases\Transfer;
 use Modules\Wallet\Application\UseCases\ReverseTransaction;
 use Modules\Wallet\Application\UseCases\GetTransactions;
+use Modules\Wallet\Infra\Requests\TransferRequest;
 use Modules\Wallet\Infra\Responses\TransactionResponse;
 use Modules\Wallet\Infra\Responses\WalletResponse;
 
@@ -36,17 +37,12 @@ class WalletController extends Controller
         }
     }
 
-    public function transfer(Request $request)
+    public function transfer(TransferRequest $request)
     {
         try {
-            $request->validate([
-                'to_user_id' => 'required|integer',
-                'amount' => 'required|numeric|min:0.01'
-            ]);
+            $user = $request->attributes->get('user');
 
-            $fromUserId = $request->attributes->get('user')->getId();
-
-            $transaction = $this->transfer->execute($fromUserId, $request->to_user_id, $request->amount);
+            $transaction = $this->transfer->execute($user, $request->email, $request->amount, $request->description);
             
             return WalletResponse::transfer($transaction);
 

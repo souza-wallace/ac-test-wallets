@@ -48,7 +48,7 @@ test('reverse transfer reverses a transfer transaction', function () {
     // Fazer transferência
     $transfer = app(Transfer::class);
     $amount = 50.0;
-    $transferTransaction = $transfer->execute($fromUser->getId(), $toUser->getId(), $amount);
+    $transferTransaction = $transfer->execute($fromUser, $toUser->getEmail(), $amount);
 
     // Reverter a transferência
     $reverseTransfer = app(ReverseTransfer::class);

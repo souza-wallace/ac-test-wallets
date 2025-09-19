@@ -7,4 +7,6 @@ enum TransactionStatus: string
     case PENDING = 'PENDING';
     case COMPLETED = 'COMPLETED';
     case REVERSED = 'REVERSED';
+    case FAILED = 'FAILED';
+
 }

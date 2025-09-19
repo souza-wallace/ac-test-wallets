@@ -30,6 +30,13 @@ class UserRepository implements UserRepositoryInterface
         return $userModel ? $this->toDomainEntity($userModel) : null;
     }
 
+    public function findByEmailWithWallet(string $email): ?User
+   {
+        $userModel = UserModel::with('wallet')->where('email', $email)->first();
+        
+        return $userModel ? $this->toDomainEntity($userModel) : null;
+    }
+
     public function save(User $user): User
     {
        

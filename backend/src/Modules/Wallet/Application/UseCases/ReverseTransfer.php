@@ -2,6 +2,7 @@
 
 namespace Modules\Wallet\Application\UseCases;
 
+use Modules\Shared\Exceptions\CannotReverseException;
 use Modules\Shared\Exceptions\InsufficientBalanceException;
 use Modules\User\Domain\Repositories\UserRepositoryInterface;
 use Modules\Wallet\Domain\Repositories\WalletRepositoryInterface;
@@ -22,6 +23,10 @@ class ReverseTransfer
         $fromWallet = $this->walletRepository->findByUserId($transaction->getUserId());
         $toWallet = $this->walletRepository->findByUserId($transaction->getRecipientWalletId());
 
+        if (!$transaction->getCanReverse()) {
+            throw new CannotReverseException();
+        }
+
         if ($toWallet->getBalance() < $transaction->getAmount()) {
             throw new InsufficientBalanceException();
         }
@@ -29,14 +34,20 @@ class ReverseTransfer
         $this->walletRepository->updateBalance($fromWallet->getId(), $fromWallet->getBalance() + $transaction->getAmount());
         $this->walletRepository->updateBalance($toWallet->getId(), $toWallet->getBalance() - $transaction->getAmount());
 
-        $reversalTransaction = Transaction::createNew(
-            $transaction->getRecipientWalletId(),
+        $reversalTransaction = Transaction::create(
             $toWallet->getId(),
+            $transaction->getRecipientWalletId(),
             TransactionType::REVERSAL,
             $transaction->getAmount(),
-            $transaction->getUserId()
+            $transaction->getUserId(),
+            'Estorno de transferência',
+            $transaction->getId(),
+            false
         );
 
         $this->transactionRepository->save($reversalTransaction);
+
+        $transaction->markAsIrreversible();
+        $this->transactionRepository->save($transaction);
     }
 }

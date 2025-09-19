@@ -28,7 +28,7 @@ class ReverseDeposit
         $newBalance = $wallet->getBalance() - $transaction->getAmount();
         $this->walletRepository->updateBalance($wallet->getId(), $newBalance);
 
-        $reversalTransaction = Transaction::createNew(
+        $reversalTransaction = Transaction::create(
             $transaction->getUserId(),
             $wallet->getId(),
             TransactionType::REVERSAL,

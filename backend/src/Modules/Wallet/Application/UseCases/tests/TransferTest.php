@@ -22,7 +22,7 @@ test('transfer moves amount between wallets', function () {
 
     $transfer = app(Transfer::class);
     $amount = 50.0;
-    $transaction = $transfer->execute($fromUser->getId(), $toUser->getId(), $amount);
+    $transaction = $transfer->execute($fromUser, $toUser->getEmail(), $amount);
 
     expect($transaction->getAmount())->toBe($amount)
         ->and($transaction->getUserId())->toBe($fromUser->getId());
@@ -34,7 +34,7 @@ test('Transfer should throw InsufficientBalanceException when balance is insuffi
     
     $transfer = app(Transfer::class);
     
-    expect(fn() => $transfer->execute($fromUser->getId(), $toUser->getId(), 250.0))
+    expect(fn() => $transfer->execute($fromUser, $toUser->getEmail(), 250.0))
         ->toThrow(InsufficientBalanceException::class);
 });
 
@@ -44,7 +44,7 @@ test('Transfer should throw InvalidArgumentException for non-existent user', fun
     
     $transfer = app(Transfer::class);
     
-    expect(fn() => $transfer->execute($fromUser->getId(), 100000, 250.0))
+    expect(fn() => $transfer->execute($fromUser, 100000, 250.0))
         ->toThrow(InvalidArgumentException::class, 'User not found');
 });
 
@@ -54,7 +54,7 @@ test('Transfer should throw InvalidArgumentException when transferring to self',
     
     $transfer = app(Transfer::class);
     
-    expect(fn() => $transfer->execute($fromUser->getId(), $fromUser->getId(), 250.0))
+    expect(fn() => $transfer->execute($fromUser, $fromUser->getEmail(), 250.0))
         ->toThrow(InvalidArgumentException::class, 'Cannot transfer to yourself');
 });
 

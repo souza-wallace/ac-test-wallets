@@ -66,7 +66,7 @@ test('reverse deposit should throw exception InsufficientBalanceException', func
     $amount = 100.0;
     $depositTransaction = $deposit->execute($user->getId(), $amount);
 
-    $depositTransaction->setAmount(200);
+    $depositTransaction->adjustAmount(200);
     
     // Reverter o depósito
     $reverseDeposit = app(ReverseDeposit::class);

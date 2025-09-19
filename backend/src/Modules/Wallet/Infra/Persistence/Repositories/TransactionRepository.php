@@ -12,17 +12,24 @@ class TransactionRepository implements TransactionRepositoryInterface
 {
     public function save(Transaction $transaction): Transaction
     {
-        $transactionModel = new TransactionModel([
+        $transactionModel = $transaction->getId()
+            ? TransactionModel::findOrFail($transaction->getId())
+            : new TransactionModel();
+    
+        $transactionModel->fill([
             'user_id' => $transaction->getUserId(),
             'wallet_id' => $transaction->getWalletId(),
             'type' => $transaction->getType()->value,
             'amount' => $transaction->getAmount(),
             'related_wallet' => $transaction->getRecipientWalletId(),
-            'status' => $transaction->getStatus()
+            'status' => $transaction->getStatus(),
+            'description' => $transaction->getDescription(),
+            'reference_id' => $transaction->getReferenceId(),
+            'can_reverse' => $transaction->getCanReverse(),
         ]);
-        
+    
         $transactionModel->save();
-        
+    
         return $this->toDomainEntity($transactionModel);
     }
 

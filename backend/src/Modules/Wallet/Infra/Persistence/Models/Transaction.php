@@ -21,6 +21,7 @@ class Transaction extends Model
         'amount',
         'description',
         'reference_id',
+        'can_reverse'
     ];
 
     protected $casts = [

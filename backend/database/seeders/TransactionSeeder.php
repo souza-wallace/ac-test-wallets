@@ -34,7 +34,7 @@ class TransactionSeeder extends Seeder
             'wallet_id' => 1,
             'related_wallet' => 2,
             'type' => 'TRANSFER',
-            'amount' => -50,
+            'amount' => 50,
             'status' => 'COMPLETED',
             'description' => 'Transferência para Bob',
         ]);
@@ -73,7 +73,7 @@ class TransactionSeeder extends Seeder
             'wallet_id' => 4,
             'related_wallet' => 1,
             'type' => 'TRANSFER',
-            'amount' => -30,
+            'amount' => 30,
             'status' => 'COMPLETED',
             'description' => 'Transferência sem saldo',
         ]);

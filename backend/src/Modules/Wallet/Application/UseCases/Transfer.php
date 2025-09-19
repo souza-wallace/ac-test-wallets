@@ -4,6 +4,7 @@ namespace Modules\Wallet\Application\UseCases;
 
 use Illuminate\Support\Facades\DB;
 use Modules\Shared\Exceptions\InsufficientBalanceException;
+use Modules\User\Domain\Entities\User;
 use Modules\User\Domain\Repositories\UserRepositoryInterface;
 use Modules\Wallet\Domain\Repositories\WalletRepositoryInterface;
 use Modules\Wallet\Domain\Repositories\TransactionRepositoryInterface;
@@ -17,15 +18,15 @@ class Transfer
         private WalletRepositoryInterface $walletRepository
     ) {}
 
-    public function execute(int $fromUserId, int $toUserId, float $amount): Transaction
+    public function execute(User $user, String $toUserEmail, float $amount, ?String $description = null): Transaction
     {
-        if ($fromUserId === $toUserId) {
+        if ($user->getEmail() === $toUserEmail) {
             throw new \InvalidArgumentException('Cannot transfer to yourself');
         }
 
-        return DB::transaction(function () use ($fromUserId, $toUserId, $amount) {
-            $fromUser = $this->userRepository->findByIdWithWallet($fromUserId);
-            $toUser = $this->userRepository->findByIdWithWallet($toUserId);
+        return DB::transaction(function () use ($user, $toUserEmail, $amount, $description) {
+            $fromUser = $this->userRepository->findByEmailWithWallet($user->getEmail());
+            $toUser = $this->userRepository->findByEmailWithWallet($toUserEmail);
         
             if (!$fromUser || !$toUser) {
                 throw new \InvalidArgumentException('User not found');
@@ -52,12 +53,13 @@ class Transfer
                 $toWallet->getBalance() + $amount
             );
         
-            $transaction = Transaction::createNew(
+            $transaction = Transaction::create(
                 $fromWallet->getId(),
-                $fromUserId,
+                $user->getId(),
                 TransactionType::TRANSFER,
                 $amount,
-                $toWallet->getId()
+                $toWallet->getId(),
+                $description
             );
 
             return $this->transactionRepository->save($transaction);

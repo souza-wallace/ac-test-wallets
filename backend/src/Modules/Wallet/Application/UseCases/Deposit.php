@@ -31,7 +31,7 @@ class Deposit
             $newBalance = $wallet->getBalance() + $amount;
             $this->walletRepository->updateBalance($wallet->getId(), $newBalance);
 
-            $transaction = Transaction::createNew(
+            $transaction = Transaction::create(
                 $userId,
                 $wallet->getId(),
                 TransactionType::DEPOSIT,
