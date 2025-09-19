@@ -1,19 +1,18 @@
 services:
-  php-nginx:
-    container_name: php-nginx
+  laravel:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: laravel_app
     restart: unless-stopped
-    tty: true
     volumes:
       - ./:/var/www
-      - ./docker/php/extra-php.ini:/usr/local/etc/php/conf.d/extra-php.ini
-      - ./docker/php/extra-php-fpm.conf:/etc/php8/php-fpm.d/www.conf
     ports:
-      - "8001:80" #http
+      - "8001:8000"
     networks:
       - laravel
+    depends_on:
+      - mysql
 
   mysql:
     image: mysql:8.0
