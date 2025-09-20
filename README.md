@@ -34,6 +34,15 @@ cd test-ac-wallets
 docker compose up -d
 ```
 
+### Entre no container
+```bash
+docker exec -it laravel_app /bin/bash
+```
+
+### Execute o comando
+```bash
+php artisan db:seed
+```
 
 ### Localmente
 Requisitos: 
