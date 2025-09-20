@@ -63,7 +63,7 @@ DB_USERNAME=root
 DB_PASSWORD=
 
 # Executar migrations
-php artisan migrate
+php artisan migrate --seed
 
 # Iniciar servidor
 php artisan serve --port=8001
